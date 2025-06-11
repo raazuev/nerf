@@ -1,11 +1,23 @@
 import * as PIXI from "pixi.js";
+import { SceneManager } from "./core/sceneManager";
+import { Loader } from "./core/loader";
 
-let app;
+window.onload = () => {
+  const canvas = document.getElementById("nerf");
 
-window.onload = function () {
-  app = new PIXI.Application({
+  const app = new PIXI.Application({
+    view: canvas,
     resizeTo: window,
-    backgroundColor: 0x33333,
+    backgroundColor: 0x99999,
   });
-  document.body.appendChild(app.view);
+
+  Loader.init()
+    .addAssets([
+      { name: "main_bg", url: "/assets/images/homeScreen/main_bg.png" },
+    ])
+    .load(() => {
+      const manager = new SceneManager(app);
+      manager.changeScene("intro");
+      app.ticker.add((delta) => manager.update(delta));
+    });
 };
