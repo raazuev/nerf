@@ -23,12 +23,12 @@ export class ButtonGame extends PIXI.Container {
       fontFamily: "Arial",
     };
     this.#colors = {
-      background: options.colors?.background ?? 0x0077cc,
-      hover: options.colors?.hover ?? 0xfdc301,
-      active: options.colors?.active ?? 0x00457a,
-      text: options.colors?.text ?? "black",
+      background: options.colors?.background ?? 0x09d1e1,
+      hover: options.colors?.hover ?? 0xf47921,
+      active: options.colors?.active ?? 0xf47921,
+      text: options.colors?.text ?? "#02132a",
     };
-    this.#cornerRadius = options.cornerRadius ?? 8;
+    this.#cornerRadius = options.cornerRadius ?? 1;
 
     // создание текста
     this.#label = new PIXI.Text(text, {
@@ -89,6 +89,9 @@ export class ButtonGame extends PIXI.Container {
       // проверка, находится ли указатель внутри: в Pixi сложно, но можно просто сбросить в hover
       this.#drawBackground(this.#colors.hover);
     });
+
+    this.#drawBackground(this.#colors.background);
+    this._adaptTextScale();
   }
 
   // Перерисовка фона с указанным цветом
@@ -98,6 +101,28 @@ export class ButtonGame extends PIXI.Container {
     g.beginFill(color);
     g.drawRoundedRect(0, 0, this.#width, this.#height, this.#cornerRadius);
     g.endFill();
+  }
+
+  _adaptTextScale() {
+    if (!this.#label) return;
+    // Сбрасываем предыдущий scale, чтобы мерить исходный размер
+    this.#label.scale.set(1);
+
+    const textBounds = this.#label.getLocalBounds();
+    const textW = textBounds.width;
+    const textH = textBounds.height;
+
+    const availW = this.#width - 2 * this.#paddingX;
+    const availH = this.#height - 2 * this.#paddingY;
+
+    if (textW <= 0 || textH <= 0 || availW <= 0 || availH <= 0) {
+      return;
+    }
+    const scaleX = availW / textW;
+    const scaleY = availH / textH;
+    // Не увеличиваем текст сверх исходного размера, если не нужно:
+    const scaleFactor = Math.min(scaleX, scaleY, 1);
+    this.#label.scale.set(scaleFactor);
   }
 
   setPosition(x, y) {
@@ -118,50 +143,6 @@ export class ButtonGame extends PIXI.Container {
     this.#background.x = -this.#width / 2;
     this.#background.y = -this.#height / 2;
     // Текст остаётся центрированным (anchor уже 0.5)
+    this._adaptTextScale();
   }
 }
-
-// #label;
-// #width;
-// #height;
-// #paddingX;
-// #paddingY;
-// #style;
-// #cornerRadius;
-// #colors;
-
-// constructor(text, style = {}) {
-//   super();
-
-//   this.#label = new PIXI.Text(text, {
-//     fill: "blue",
-//     fontSize: 48,
-//     fontFamily: "Arial",
-//     align: "center",
-//     ...style,
-//   });
-
-//   this.addChild(this.#label);
-//   this.#label.anchor.set(0.5);
-//   this.#label.x = 0;
-//   this.#label.y = 0;
-
-//   this.interactive = true;
-//   this.buttonMode = true;
-
-//   this.on("pointerover", () => {
-//     this.scale.set(1.05);
-//   });
-//   this.on("pointerout", () => {
-//     this.scale.set(1);
-//   });
-// }
-
-// setPosition(x, y) {
-//   this.x = x;
-//   this.y = y;
-// }
-
-// onClick(callback) {
-//   this.on("pointertap", callback);
-// }
