@@ -16,24 +16,28 @@ window.onload = () => {
     .addAssets([
       { name: "main_bg", url: "/assets/images/homeScreen/main_bg.png" },
       {
+        name: "weapon_bg",
+        url: "/assets/images/weaponScreen/weapon_bg.png",
+      },
+      {
         name: "logo_primary",
         url: "/assets/images/homeScreen/logo_primary.png",
       },
       {
         name: "Volt",
-        url: "/assets/images/homeScreen/Elite20_Volt.png",
+        url: "/assets/images/weapons/Elite20_Volt.png",
       },
       {
         name: "Shockwave",
-        url: "/assets/images/homeScreen/Elite20_Shockwave.png",
+        url: "/assets/images/weapons/Elite20_Shockwave.png",
       },
       {
-        name: "Power",
-        url: "/assets/images/homeScreen/Elite20_Power.png",
+        name: "Echo",
+        url: "/assets/images/weapons/Elite20_Echo.png",
       },
       {
         name: "Commander",
-        url: "/assets/images/homeScreen/Elite20_Commander.png",
+        url: "/assets/images/weapons/Elite20_Commander.png",
       },
     ])
     .load(() => {

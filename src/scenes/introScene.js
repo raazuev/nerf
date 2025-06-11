@@ -66,7 +66,7 @@ export class IntroScene extends BaseScene {
     weaponKeys.forEach((key) => {
       const item = new WeaponItem(key, {
         onClick: (weaponKey) => {
-          // Переход к сцене деталей
+          console.log("WeaponItem clicked:", weaponKey);
           this._manager.changeScene("weapon", { weaponKey });
         },
       });
@@ -96,7 +96,10 @@ export class IntroScene extends BaseScene {
       /* VIEW RANGE */
     });
     this.#buttons[3].onClick(() => {
-      // window.open("https://nerf.example.com", "_blank");
+      window.open(
+        "https://www.blasterparts.com/fr/c/categories-de-produits/nerf-dartblaster",
+        "_blank"
+      );
     });
   }
 
@@ -168,58 +171,61 @@ export class IntroScene extends BaseScene {
       this.#titleText.y = titleY;
     }
 
-      // 3) Простая раскладка превью-оружия по горизонту, центрируем ряд
-  if (this.#previewContainer && this.#previewItems.length > 0) {
-    const totalItems = this.#previewItems.length;
-    // Горизонтальный gap между превью
-    const gap = 20;
-    // Вычислим ширину каждого превью: 
-    // хотим, чтобы ряд не был слишком широким: 
-    // допустим, максимальная ширина каждого = rw * 0.2, но ограничиваем min/max
-    const maxItemWidth = rw * 0.25; 
-    const minItemWidth = 80;
-    // Если ряд из N, то иногда itemWidth нужно уменьшить, чтобы весь ряд поместился:
-    // Предварительный candidate:
-    let itemWidth = Math.min(maxItemWidth, (rw - gap * (totalItems - 1) - 40) / totalItems);
-    itemWidth = Math.max(minItemWidth, itemWidth);
-    // Позиционируем каждый:
-    // Сначала очистим контейнер из дочерних и заново добавим в порядке:
-    this.#previewContainer.removeChildren();
-    // Считаем полную ширину ряда: fullWidth = totalItems*itemWidth + (totalItems-1)*gap
-    const fullWidth = totalItems * itemWidth + (totalItems - 1) * gap;
-    // Начальный X: (rw - fullWidth)/2  — это левый край ряда
-    const startX = (rw - fullWidth) / 2;
-    // Вертикальная позиция: например, посередине экрана, но чуть выше кнопок. Пусть y = rh * 0.4
-    const centerY = rh * 0.4;
-    // Для каждого элемента:
-    this.#previewItems.forEach((item, index) => {
-      // Вычисляем высоту по aspect исходного спрайта:
-      const sprite = item.children.find(ch => ch instanceof PIXI.Sprite);
-      let aspect = 1;
-      if (sprite && sprite.texture) {
-        aspect = sprite.texture.width / sprite.texture.height;
-      }
-      const itemHeight = itemWidth / aspect;
-      // Добавляем в контейнер:
-      this.#previewContainer.addChild(item);
-      // Устанавливаем размер и позицию относительно контейнера:
-      item.setSize(itemWidth, itemHeight);
-      // Позиция: x = startX + index*(itemWidth + gap) + itemWidth/2, y = centerY
-      const x = startX + index * (itemWidth + gap) + itemWidth / 2;
-      item.setPosition(x, centerY);
-    });
-    // Если хотим анимацию появления один раз:
-    if (!this._previewAnimated) {
-      this._previewAnimated = true;
-      gsap.from(this.#previewItems, {
-        alpha: 0,
-        y: "+=20",
-        duration: 0.8,
-        stagger: 0.1,
-        ease: "power2.out",
+    // 3) Простая раскладка превью-оружия по горизонту, центрируем ряд
+    if (this.#previewContainer && this.#previewItems.length > 0) {
+      const totalItems = this.#previewItems.length;
+      // Горизонтальный gap между превью
+      const gap = 20;
+      // Вычислим ширину каждого превью:
+      // хотим, чтобы ряд не был слишком широким:
+      // допустим, максимальная ширина каждого = rw * 0.2, но ограничиваем min/max
+      const maxItemWidth = rw * 0.25;
+      const minItemWidth = 80;
+      // Если ряд из N, то иногда itemWidth нужно уменьшить, чтобы весь ряд поместился:
+      // Предварительный candidate:
+      let itemWidth = Math.min(
+        maxItemWidth,
+        (rw - gap * (totalItems - 1) - 40) / totalItems
+      );
+      itemWidth = Math.max(minItemWidth, itemWidth);
+      // Позиционируем каждый:
+      // Сначала очистим контейнер из дочерних и заново добавим в порядке:
+      this.#previewContainer.removeChildren();
+      // Считаем полную ширину ряда: fullWidth = totalItems*itemWidth + (totalItems-1)*gap
+      const fullWidth = totalItems * itemWidth + (totalItems - 1) * gap;
+      // Начальный X: (rw - fullWidth)/2  — это левый край ряда
+      const startX = (rw - fullWidth) / 2;
+      // Вертикальная позиция: например, посередине экрана, но чуть выше кнопок. Пусть y = rh * 0.4
+      const centerY = rh * 0.45;
+      // Для каждого элемента:
+      this.#previewItems.forEach((item, index) => {
+        // Вычисляем высоту по aspect исходного спрайта:
+        const sprite = item.children.find((ch) => ch instanceof PIXI.Sprite);
+        let aspect = 1;
+        if (sprite && sprite.texture) {
+          aspect = sprite.texture.width / sprite.texture.height;
+        }
+        const itemHeight = itemWidth / aspect;
+        // Добавляем в контейнер:
+        this.#previewContainer.addChild(item);
+        // Устанавливаем размер и позицию относительно контейнера:
+        item.setSize(itemWidth, itemHeight);
+        // Позиция: x = startX + index*(itemWidth + gap) + itemWidth/2, y = centerY
+        const x = startX + index * (itemWidth + gap) + itemWidth / 2;
+        item.setPosition(x, centerY);
       });
+      // Если хотим анимацию появления один раз:
+      if (!this._previewAnimated) {
+        this._previewAnimated = true;
+        gsap.from(this.#previewItems, {
+          alpha: 0,
+          y: "+=20",
+          duration: 0.8,
+          stagger: 0.1,
+          ease: "power2.out",
+        });
+      }
     }
-  }
 
     const maxBtnWidth = 700; // максимальная ширина на больших экранах
     const minBtnWidth = 170; // минимальная ширина на очень мелких экранах
@@ -233,7 +239,7 @@ export class IntroScene extends BaseScene {
     const leftX = marginX + btnWidth / 2;
     const rightX = rw - marginX - btnWidth / 2;
     // Вертикаль: от нижнего края вверх:
-    const offsetY = 100; // отступ от низа до центра первой строки
+    const offsetY = 60; // отступ от низа до центра первой строки
     const spacingY = 20; // расстояние между рядами
     const firstRowY = rh - offsetY;
     const secondRowY = firstRowY - (btnHeight + spacingY);

@@ -59,7 +59,7 @@ export class SceneManager {
     return this.#app.renderer.height;
   }
 
-  changeScene(key) {
+  changeScene(key, params = {}) {
     // Удаляем предыдущую сцену
     if (this.#currentScene) {
       this.#currentScene.destroy({ children: true });
