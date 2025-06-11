@@ -3,10 +3,23 @@ import { IntroScene } from "../scenes/introScene";
 export class SceneManager {
   #app;
   #currentScene = null;
+  stage;
 
   constructor(app) {
     this.#app = app;
     this.stage = app.stage;
+
+    // Слушаем ресайз окна
+    window.addEventListener("resize", () => {
+      const rw = this.rendererWidth;
+      const rh = this.rendererHeight;
+      if (
+        this.#currentScene &&
+        typeof this.#currentScene.onResize === "function"
+      ) {
+        this.#currentScene.onResize(rw, rh);
+      }
+    });
   }
 
   get rendererWidth() {
@@ -32,6 +45,12 @@ export class SceneManager {
     this.#currentScene = scene;
     this.stage.addChild(scene);
     scene.init();
+
+    const rw = this.rendererWidth;
+    const rh = this.rendererHeight;
+    if (typeof scene.onResize === "function") {
+      scene.onResize(rw, rh);
+    }
   }
 
   update(delta) {

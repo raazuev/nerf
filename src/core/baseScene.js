@@ -10,11 +10,11 @@ export class BaseScene extends PIXI.Container {
   get _manager() {
     return this.#manager;
   }
-  init() {
-    /* обязателен override */
-  }
+  init() {}
   update(delta) {}
   destroy(options) {
     super.destroy(options);
   }
+
+  onResize(width, height) {}
 }
