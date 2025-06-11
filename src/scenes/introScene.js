@@ -3,6 +3,8 @@ import * as PIXI from "pixi.js";
 import { BaseScene } from "../core/baseScene";
 import { gsap } from "gsap";
 import { ButtonGame } from "../utils/textButton";
+import { WeaponItem } from "../utils/weaponItem";
+import { weaponsData } from "../data/weaponsData";
 
 export class IntroScene extends BaseScene {
   #bg;
@@ -13,6 +15,11 @@ export class IntroScene extends BaseScene {
   images = [];
   #rawTitle =
     "Choose your blaster then shoot as many targets as you can within";
+  #previewContainer; // контейнер для превью оружия на главном экране
+  #previewItems = []; // массив WeaponItem в превью
+  _logoAnimated = false;
+  _buttonsAnimated = false;
+  _previewAnimated = false;
 
   constructor(manager) {
     super(manager);
@@ -48,14 +55,24 @@ export class IntroScene extends BaseScene {
     this.#titleText.anchor.set(1, 0.5);
     this.addChild(this.#titleText);
 
-    PIXI.Loader.shared.resources.some_img;
-    const resImg = PIXI.Loader.shared.resources.Volt;
-    if (resImg && resImg.texture) {
-      const imgSprite = new PIXI.Sprite(resImg.texture);
-      imgSprite.anchor.set(0.5);
-      this.#gunsSprite.push(imgSprite);
-      this.addChild(imgSprite);
-    }
+    // 1) Создаём контейнер для превью оружия
+    this.#previewContainer = new PIXI.Container();
+    this.addChild(this.#previewContainer);
+
+    // 2) Получаем список ключей оружия:
+    const weaponKeys = Object.keys(weaponsData); // ["Volt","Shockwave","Power","Commander"]
+
+    // 3) Создаём WeaponItem для каждого ключа, добавляем в previewContainer
+    weaponKeys.forEach((key) => {
+      const item = new WeaponItem(key, {
+        onClick: (weaponKey) => {
+          // Переход к сцене деталей
+          this._manager.changeScene("weapon", { weaponKey });
+        },
+      });
+      this.#previewItems.push(item);
+      this.#previewContainer.addChild(item);
+    });
 
     // Создаём кнопки, фиксированного базового размера или авто:
     const labels = ["PLAY MINIGAME", "WATCH VIDEO", "VIEW RANGE", "VISIT NERF"];
@@ -71,7 +88,7 @@ export class IntroScene extends BaseScene {
     });
 
     // Навешиваем события кликов (далее точки назначения по кнопкам):
-    this.#buttons[0].onClick(() => this._manager.changeScene("weapon-select"));
+    this.#buttons[0].onClick(() => this._manager.changeScene("weapon"));
     this.#buttons[1].onClick(() => {
       /* WATCH VIDEO */
     });
@@ -81,9 +98,7 @@ export class IntroScene extends BaseScene {
     this.#buttons[3].onClick(() => {
       // window.open("https://nerf.example.com", "_blank");
     });
-
   }
-
 
   onResize(rw, rh) {
     // обновляем фон
@@ -153,13 +168,65 @@ export class IntroScene extends BaseScene {
       this.#titleText.y = titleY;
     }
 
+      // 3) Простая раскладка превью-оружия по горизонту, центрируем ряд
+  if (this.#previewContainer && this.#previewItems.length > 0) {
+    const totalItems = this.#previewItems.length;
+    // Горизонтальный gap между превью
+    const gap = 20;
+    // Вычислим ширину каждого превью: 
+    // хотим, чтобы ряд не был слишком широким: 
+    // допустим, максимальная ширина каждого = rw * 0.2, но ограничиваем min/max
+    const maxItemWidth = rw * 0.25; 
+    const minItemWidth = 80;
+    // Если ряд из N, то иногда itemWidth нужно уменьшить, чтобы весь ряд поместился:
+    // Предварительный candidate:
+    let itemWidth = Math.min(maxItemWidth, (rw - gap * (totalItems - 1) - 40) / totalItems);
+    itemWidth = Math.max(minItemWidth, itemWidth);
+    // Позиционируем каждый:
+    // Сначала очистим контейнер из дочерних и заново добавим в порядке:
+    this.#previewContainer.removeChildren();
+    // Считаем полную ширину ряда: fullWidth = totalItems*itemWidth + (totalItems-1)*gap
+    const fullWidth = totalItems * itemWidth + (totalItems - 1) * gap;
+    // Начальный X: (rw - fullWidth)/2  — это левый край ряда
+    const startX = (rw - fullWidth) / 2;
+    // Вертикальная позиция: например, посередине экрана, но чуть выше кнопок. Пусть y = rh * 0.4
+    const centerY = rh * 0.4;
+    // Для каждого элемента:
+    this.#previewItems.forEach((item, index) => {
+      // Вычисляем высоту по aspect исходного спрайта:
+      const sprite = item.children.find(ch => ch instanceof PIXI.Sprite);
+      let aspect = 1;
+      if (sprite && sprite.texture) {
+        aspect = sprite.texture.width / sprite.texture.height;
+      }
+      const itemHeight = itemWidth / aspect;
+      // Добавляем в контейнер:
+      this.#previewContainer.addChild(item);
+      // Устанавливаем размер и позицию относительно контейнера:
+      item.setSize(itemWidth, itemHeight);
+      // Позиция: x = startX + index*(itemWidth + gap) + itemWidth/2, y = centerY
+      const x = startX + index * (itemWidth + gap) + itemWidth / 2;
+      item.setPosition(x, centerY);
+    });
+    // Если хотим анимацию появления один раз:
+    if (!this._previewAnimated) {
+      this._previewAnimated = true;
+      gsap.from(this.#previewItems, {
+        alpha: 0,
+        y: "+=20",
+        duration: 0.8,
+        stagger: 0.1,
+        ease: "power2.out",
+      });
+    }
+  }
+
     const maxBtnWidth = 700; // максимальная ширина на больших экранах
     const minBtnWidth = 170; // минимальная ширина на очень мелких экранах
     const btnWidth = Math.min(maxBtnWidth, Math.max(minBtnWidth, rw * 0.4));
     // Высоту можно задать пропорционально, например, фиксированную или зависящую от ширины:
     const aspect = 900 / 150; // если базово кнопка 700x100, aspect = 7
     const btnHeight = btnWidth / aspect; // сохраняем пропорцию
-
 
     // Вычисляем позиции двух колонок:
     const marginX = 0;
@@ -185,7 +252,7 @@ export class IntroScene extends BaseScene {
       this.#buttons[1].setPosition(rightX, secondRowY);
       this.#buttons[2].setPosition(leftX, firstRowY);
       this.#buttons[3].setPosition(rightX, firstRowY);
-    } 
+    }
 
     if (!this._animated) {
       this._animated = true;
