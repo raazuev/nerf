@@ -1,0 +1,30 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+canvas#nerf {
+  display: block;
+  width: 100%;
+  height: 100vh;
+  background-color: #333;
+}
+
+@font-face {
+  font-family: "EurostileBold";
+  src: url("/assets/fonts/Eurostile_Bold.ttf") format("truetype");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "EurostileNormal";
+  src: url("/assets/fonts/EuroStyle_Normal.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
