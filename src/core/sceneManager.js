@@ -55,11 +55,18 @@ export class SceneManager {
     }
   }
 
+  // get rendererWidth() {
+  //   return this.#app.renderer.width;
+  // }
+  // get rendererHeight() {
+  //   return this.#app.renderer.height;
+  // }
+
   get rendererWidth() {
-    return this.#app.renderer.width;
+    return this.#app.renderer.screen.width;
   }
   get rendererHeight() {
-    return this.#app.renderer.height;
+    return this.#app.renderer.screen.height;
   }
 
   changeScene(key, params = {}) {

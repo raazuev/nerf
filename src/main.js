@@ -21,6 +21,8 @@ function initPixiApp() {
     view: canvas,
     resizeTo: window,
     backgroundColor: 0x99999,
+    resolution: window.devicePixelRatio || 1,
+    autoDensity: true,
   });
 
   // общий лоадер

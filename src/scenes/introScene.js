@@ -256,6 +256,7 @@ export class IntroScene extends BaseScene {
       }
     }
 
+
     const btnCount = this.#buttons.length;
     if (isMobile) {
       const btnWidth = Math.min(300, rw * 0.8);
