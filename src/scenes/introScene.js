@@ -47,7 +47,7 @@ export class IntroScene extends BaseScene {
     const rawText = this.#rawTitle;
     this.#titleText = new PIXI.Text(rawText.toUpperCase(), {
       fill: "#ffffff",
-      fontFamily: "Arial",
+      fontFamily: "EurostileBold",
       fontSize: 48,
       align: "center",
       wordWrap: true,
@@ -79,7 +79,9 @@ export class IntroScene extends BaseScene {
       this.addChild(btn);
     });
 
-    this.#buttons[0].onClick(() => {});
+    this.#buttons[0].onClick(() => {
+      this._manager.changeScene("weapon-select");
+    });
     this.#buttons[1].onClick(() => this._onWatchVideoClick());
     this.#buttons[2].onClick(() => {
       this._manager.changeScene("weapon");
@@ -114,8 +116,8 @@ export class IntroScene extends BaseScene {
         });
       }
       const logoTex = this.#logoSprite.texture;
-      const maxLogoWidth = rw * 0.5; 
-      const minLogoWidth = 100; 
+      const maxLogoWidth = rw * 0.5;
+      const minLogoWidth = 100;
       let logoW = rw * 0.4;
       logoW = Math.min(maxLogoWidth, Math.max(minLogoWidth, logoW));
       const aspectLogo = logoTex.width / logoTex.height;
@@ -136,7 +138,7 @@ export class IntroScene extends BaseScene {
       let fontSize = Math.round(rw * 0.035);
       fontSize = Math.min(maxFontSize, Math.max(minFontSize, fontSize));
       this.#titleText.style.fontSize = fontSize;
-      const wrapWidth = rw * 0.6; 
+      const wrapWidth = rw * 0.6;
       this.#titleText.style.wordWrapWidth = wrapWidth;
 
       const marginRight = 20;
@@ -144,7 +146,7 @@ export class IntroScene extends BaseScene {
 
       let titleY;
       if (this.#logoSprite) {
-        titleY = this.#logoSprite.y; 
+        titleY = this.#logoSprite.y;
       } else {
         titleY = marginTop + fontSize / 2;
       }
@@ -193,20 +195,19 @@ export class IntroScene extends BaseScene {
       }
     }
 
-    const maxBtnWidth = 700; 
-    const minBtnWidth = 170; 
+    const maxBtnWidth = 700;
+    const minBtnWidth = 170;
     const btnWidth = Math.min(maxBtnWidth, Math.max(minBtnWidth, rw * 0.4));
-    const aspect = 900 / 150; 
-    const btnHeight = btnWidth / aspect; 
+    const aspect = 900 / 150;
+    const btnHeight = btnWidth / aspect;
 
     const marginX = 0;
     const leftX = marginX + btnWidth / 2;
     const rightX = rw - marginX - btnWidth / 2;
     const offsetY = 60;
-    const spacingY = 20; 
+    const spacingY = 20;
     const firstRowY = rh - offsetY;
     const secondRowY = firstRowY - (btnHeight + spacingY);
-
 
     this.#buttons.forEach((btn) => {
       btn.setSize(btnWidth, btnHeight);
