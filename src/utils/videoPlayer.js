@@ -1,5 +1,3 @@
-// src/utils/videoPlayer.js
-
 export class VideoPlayer {
   constructor(url, options = {}) {
     this.url = url;

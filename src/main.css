@@ -3,12 +3,14 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
+  width: 100%;
   overflow: hidden;
 }
 
 canvas#nerf {
   display: block;
   width: 100%;
+  cursor: none;
   height: 100vh;
   background-color: #333;
 }

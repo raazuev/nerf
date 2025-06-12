@@ -18,6 +18,7 @@ export class GameScene extends BaseScene {
   _hudContainer;
   _logoSprite;
   _titleText;
+  _crosshair;
 
   constructor(manager, params = {}) {
     super(manager);
@@ -37,6 +38,7 @@ export class GameScene extends BaseScene {
       this._logoSprite.anchor.set(0, 0.5);
       this._hudContainer.addChild(this._logoSprite);
     }
+
     this._titleText = new PIXI.Text("GAME", {
       fontFamily: "EurostileBold",
       fontSize: 28,
@@ -45,7 +47,8 @@ export class GameScene extends BaseScene {
     });
     this._titleText.anchor.set(0.5, 0.5);
     this._hudContainer.addChild(this._titleText);
-    this._timerText = new PIXI.Text("Time: 20", {
+
+    this._timerText = new PIXI.Text("Time: 0", {
       fontFamily: "EurostileBold",
       fontSize: 24,
       fill: "#ffffff",
@@ -53,6 +56,7 @@ export class GameScene extends BaseScene {
     });
     this._timerText.anchor.set(1, 0);
     this._hudContainer.addChild(this._timerText);
+
     this._scoreText = new PIXI.Text("Score: 0", {
       fontFamily: "EurostileBold",
       fontSize: 24,
@@ -72,6 +76,20 @@ export class GameScene extends BaseScene {
 
     this._hudContainer.alpha = 0;
     gsap.to(this._hudContainer, { alpha: 1, duration: 0.5 });
+
+    const resCross = PIXI.Loader.shared.resources["target"];
+    if (resCross && resCross.texture) {
+      this._crosshair = new PIXI.Sprite(resCross.texture);
+      this._crosshair.anchor.set(0.5);
+      this._crosshair.width = 40;
+      this._crosshair.height = 40;
+      this._crosshair.alpha = 0;
+      this.addChild(this._crosshair);
+    }
+
+    this.interactive = true;
+    this.on("pointermove", this._onPointerMove, this);
+    this.on("pointerdown", this._onPointerDown, this);
   }
 
   onResize(rw, rh) {
@@ -85,14 +103,12 @@ export class GameScene extends BaseScene {
         this._logoSprite.x = 20;
         this._logoSprite.y = 20 + this._logoSprite.height / 2;
       }
-
       if (this._titleText) {
         const fontSize = Math.min(Math.max(Math.round(rw * 0.04), 20), 36);
         this._titleText.style.fontSize = fontSize;
         this._titleText.x = rw / 2;
         this._titleText.y = 20 + fontSize / 2;
       }
-
       if (this._timerText) {
         const fontSize = Math.min(Math.max(Math.round(rw * 0.03), 18), 30);
         this._timerText.style.fontSize = fontSize;
@@ -107,6 +123,11 @@ export class GameScene extends BaseScene {
           ? this._timerText.y + this._timerText.height + 5
           : 20 + fontSize + 5;
       }
+    }
+
+    if (this._crosshair && this._crosshair.alpha === 0) {
+      this._crosshair.x = -100;
+      this._crosshair.y = -100;
     }
   }
 
@@ -129,8 +150,11 @@ export class GameScene extends BaseScene {
       this._onGameOver(finalScore);
       return;
     }
+
     if (!this._gameOverTriggered) {
-      if (now - this._lastSpawnTime > this._spawnInterval) {
+      const isMobile = this._manager.rendererWidth < 768;
+      const spawnInterval = isMobile ? 1200 : this._spawnInterval;
+      if (now - this._lastSpawnTime > spawnInterval) {
         this._spawnTarget();
         this._lastSpawnTime = now;
       }
@@ -155,36 +179,66 @@ export class GameScene extends BaseScene {
     }
   }
 
+  _onPointerMove(event) {
+    const pos = event.data.global;
+    if (this._crosshair) {
+      this._crosshair.alpha = 1;
+      this._crosshair.x = pos.x;
+      this._crosshair.y = pos.y;
+    }
+  }
+
+  _onPointerDown(event) {
+    if (this._crosshair) {
+      gsap.killTweensOf(this._crosshair.scale);
+      gsap.fromTo(
+        this._crosshair.scale,
+        { x: 0.5, y: 0.5 },
+        {
+          x: 0.2,
+          y: 0.2,
+          duration: 0.1,
+          yoyo: true,
+          repeat: 1,
+          ease: "power1.out",
+        }
+      );
+      const origY = this._crosshair.y;
+      gsap.to(this._crosshair, {
+        y: origY + 5,
+        duration: 0.05,
+        yoyo: true,
+        repeat: 1,
+        ease: "power1.out",
+      });
+    }
+  }
+
   _spawnTarget() {
     const rw = this._manager.rendererWidth;
     const rh = this._manager.rendererHeight;
+    const pointsArr = [10, 20, 30, 50, 100];
+    const points = pointsArr[Math.floor(Math.random() * pointsArr.length)];
+    const maxRadius = 60;
+    const minRadius = 25;
+    const idx = pointsArr.indexOf(points);
+    const maxIdx = pointsArr.length - 1;
+    const radius = maxRadius - ((maxRadius - minRadius) * idx) / maxIdx;
+
+    const minV = 80;
+    const maxV = 200;
+    const speed = minV + ((maxV - minV) * idx) / maxIdx;
+
+    const topOffset = 60;
     const x0 = Math.random() * rw;
-    const y0 = 20 + Math.random() * (rh - 60 - 20);
-    const cx = rw / 2,
-      cy = rh / 2;
-    let dx = x0 - cx,
-      dy = y0 - cy;
-    if (Math.hypot(dx, dy) < 10) {
-      const angle = Math.random() * Math.PI * 2;
-      dx = Math.cos(angle);
-      dy = Math.sin(angle);
-    }
-    const len = Math.hypot(dx, dy);
-    const dirX = dx / len,
-      dirY = dy / len;
-    const minV = 100,
-      maxV = 300;
-    const speed = minV + Math.random() * (maxV - minV);
-    const points = Math.max(1, Math.floor(speed / 50));
-    const accMag = 20;
-    const ax = dirX * accMag,
-      ay = dirY * accMag;
-    const maxPoints = Math.floor(maxV / 50);
-    const maxRadius = 40;
-    const minRadius = 15;
-    const deltaR = (maxRadius - minRadius) / Math.max(1, maxPoints - 1);
-    const radius = Math.max(minRadius, maxRadius - (points - 1) * deltaR);
+    const y0 = topOffset + Math.random() * (rh - topOffset - 20);
+
+    const angle = Math.random() * Math.PI * 2;
+    const dirX = Math.cos(angle);
+    const dirY = Math.sin(angle);
+
     const circle = new PIXI.Graphics();
+
     circle.beginFill(0xff0000);
     circle.drawCircle(0, 0, radius);
     circle.endFill();
@@ -192,6 +246,7 @@ export class GameScene extends BaseScene {
     circle.y = y0;
     circle.interactive = true;
     circle.buttonMode = true;
+
     const text = new PIXI.Text(String(points), {
       fontFamily: "EurostileBold",
       fontSize: Math.max(12, Math.round(radius * 0.6)),
@@ -199,19 +254,62 @@ export class GameScene extends BaseScene {
     });
     text.anchor.set(0.5);
     circle.addChild(text);
+
     const targetObj = {
       sprite: circle,
-      velocity: { x: dirX * speed, y: dirY * speed },
-      acceleration: { x: ax, y: ay },
+      velocity: { x: 0, y: 0 },
+      acceleration: { x: 0, y: 0 },
       points,
+      radius,
     };
+
     circle.on("pointertap", () => {
-      this._score += points;
-      if (this._scoreText) this._scoreText.text = `Score: ${this._score}`;
-      this._destroyTarget(targetObj);
+      circle.interactive = false;
+      gsap.killTweensOf(circle);
+      gsap.to(circle.scale, {
+        x: 1.5,
+        y: 1.5,
+        duration: 0.3,
+        ease: "power1.out",
+      });
+      gsap.to(circle, {
+        alpha: 0,
+        duration: 0.4,
+        delay: 0.2,
+        onComplete: () => {
+          this._score += points;
+          if (this._scoreText) this._scoreText.text = `Score: ${this._score}`;
+          this._destroyTarget(targetObj);
+          if (this._crosshair) {
+            gsap.killTweensOf(this._crosshair.scale);
+            gsap.fromTo(
+              this._crosshair.scale,
+              { x: 1.0, y: 1.0 },
+              {
+                x: 1.6,
+                y: 1.6,
+                duration: 0.2,
+                yoyo: true,
+                repeat: 1,
+                ease: "power1.out",
+              }
+            );
+          }
+        },
+      });
     });
+
     this.addChild(circle);
     this._targets.push(targetObj);
+
+    const delayMs = 300 + Math.random() * 200;
+    setTimeout(() => {
+      if (!this._targets.includes(targetObj)) return;
+      targetObj.velocity.x = dirX * speed;
+      targetObj.velocity.y = dirY * speed;
+      targetObj.acceleration.x = 0;
+      targetObj.acceleration.y = 0;
+    }, delayMs);
   }
 
   _destroyTarget(t) {
