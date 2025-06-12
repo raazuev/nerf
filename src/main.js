@@ -31,7 +31,7 @@ function initPixiApp() {
         name: "weapon_bg",
         url: "/assets/images/weaponScreen/weapon_bg.png",
       },
-            {
+      {
         name: "game_weapon_bg",
         url: "/assets/images/gameScreen/game_weapon_bg.png",
       },
@@ -62,6 +62,10 @@ function initPixiApp() {
       {
         name: "right",
         url: "/assets/images/arrows/right.png",
+      },
+      {
+        name: "target",
+        url: "/assets/images/gameScreen/target.png",
       },
     ])
     .load(() => {
