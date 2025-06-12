@@ -1,4 +1,3 @@
-// src/scenes/IntroScene.js
 import * as PIXI from "pixi.js";
 import { BaseScene } from "../core/baseScene";
 import { gsap } from "gsap";
@@ -95,7 +94,6 @@ export class IntroScene extends BaseScene {
   }
 
   onResize(rw, rh) {
-    // обновляем фон
     if (this.#bg) {
       const tex = this.#bg.texture;
       const scale = Math.max(rw / tex.width, rh / tex.height);
@@ -104,7 +102,6 @@ export class IntroScene extends BaseScene {
       this.#bg.y = rh / 2;
     }
 
-    // позиционирование лого
     if (this.#logoSprite) {
       if (!this._logoAnimated) {
         this._logoAnimated = true;
