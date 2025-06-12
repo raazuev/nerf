@@ -1,6 +1,5 @@
 import * as PIXI from "pixi.js";
 
-// BaseScene.js
 export class BaseScene extends PIXI.Container {
   #manager;
   constructor(manager) {
