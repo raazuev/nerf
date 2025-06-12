@@ -1,4 +1,3 @@
-// src/scenes/weaponScene.js
 import * as PIXI from "pixi.js";
 import { BaseScene } from "../core/baseScene";
 import { gsap } from "gsap";
@@ -10,9 +9,12 @@ export class WeaponScene extends BaseScene {
   #weaponKey;
   #data;
   #sprite;
+  #logoSprite;
+  #headerText;
   #textContainer;
   #titleText;
   #descText;
+  #rawTitle = "Swipe left and right to view the range!";
   #statTexts = [];
   #backButton;
   #visitSiteButton;
@@ -20,9 +22,10 @@ export class WeaponScene extends BaseScene {
   #currentIndex;
   _prevBtn;
   _nextBtn;
-  _animated = false; 
+  _animated = false;
 
-  static SITE_URL = "https://your-static-url.example.com"; 
+  static SITE_URL =
+    "https://www.blasterparts.com/fr/c/categories-de-produits/nerf-dartblaster";
 
   constructor(manager, params = {}) {
     super(manager);
@@ -49,6 +52,25 @@ export class WeaponScene extends BaseScene {
       console.warn("WeaponScene: resource 'weapon_bg' not found");
     }
 
+    const resLogo = PIXI.Loader.shared.resources.logo_primary;
+    if (resLogo && resLogo.texture) {
+      this.#logoSprite = new PIXI.Sprite(resLogo.texture);
+      this.#logoSprite.anchor.set(0, 0.5);
+      this.addChild(this.#logoSprite);
+    } else {
+      console.warn("WeaponScene: logo_primary not loaded");
+    }
+
+    const rawText = this.#rawTitle;
+    this.#headerText = new PIXI.Text(rawText.toUpperCase(), {
+      fill: "#ffffff",
+      fontFamily: "EurostileBold",
+      fontSize: 32,
+      align: "right",
+    });
+    this.#headerText.anchor.set(0, 0.5);
+    this.addChild(this.#headerText);
+
     this.#sprite = null;
     if (this.#data && this.#data.imageResource) {
       const res = PIXI.Loader.shared.resources[this.#data.imageResource];
@@ -68,7 +90,7 @@ export class WeaponScene extends BaseScene {
     if (this.#data) {
       const title = new PIXI.Text(this.#data.displayName.toUpperCase(), {
         fill: "#09d1e1",
-        fontFamily: "Arial",
+        fontFamily: "EurostileBold",
         fontSize: 36,
         align: "left",
       });
@@ -78,10 +100,10 @@ export class WeaponScene extends BaseScene {
 
       const desc = new PIXI.Text(this.#data.description || "", {
         fill: "#ffffff",
-        fontFamily: "Arial",
+        fontFamily: "EurostileBold",
         fontSize: 20,
         wordWrap: true,
-        wordWrapWidth: 400, 
+        wordWrapWidth: 400,
         align: "left",
       });
       desc.anchor.set(0, 0);
@@ -102,21 +124,34 @@ export class WeaponScene extends BaseScene {
       });
     }
 
-    this.#backButton = new ButtonGame("BACK");
+    this.#backButton = new ButtonGame("GO BACK");
     this.#backButton.onClick(() => this._manager.changeScene("intro"));
     this.addChild(this.#backButton);
 
-    this.#visitSiteButton = new ButtonGame("VISIT SITE");
+    this.#visitSiteButton = new ButtonGame("VISIT NERF");
     this.#visitSiteButton.onClick(() => {
       window.open(WeaponScene.SITE_URL, "_blank");
     });
     this.addChild(this.#visitSiteButton);
 
-    this._prevBtn = new ButtonGame("PREV");
-    this._nextBtn = new ButtonGame("NEXT");
-    this._prevBtn.onClick(() => this._goToPrevious());
-    this._nextBtn.onClick(() => this._goToNext());
-    this.addChild(this._prevBtn, this._nextBtn);
+    const resPrev = PIXI.Loader.shared.resources.left;
+    const resNext = PIXI.Loader.shared.resources.right;
+    if (resPrev && resPrev.texture) {
+      this._prevArrow = new PIXI.Sprite(resPrev.texture);
+      this._prevArrow.anchor.set(0.5);
+      this._prevArrow.interactive = true;
+      this._prevArrow.buttonMode = true;
+      this._prevArrow.on("pointertap", () => this._goToPrevious());
+      this.addChild(this._prevArrow);
+    }
+    if (resNext && resNext.texture) {
+      this._nextArrow = new PIXI.Sprite(resNext.texture);
+      this._nextArrow.anchor.set(0.5);
+      this._nextArrow.interactive = true;
+      this._nextArrow.buttonMode = true;
+      this._nextArrow.on("pointertap", () => this._goToNext());
+      this.addChild(this._nextArrow);
+    }
   }
 
   onResize(rw, rh) {
@@ -126,6 +161,57 @@ export class WeaponScene extends BaseScene {
       this.#bg.scale.set(scale);
       this.#bg.x = rw / 2;
       this.#bg.y = rh / 2;
+    }
+
+    if (this.#logoSprite) {
+      if (!this._animatedInitial) {
+        this.#logoSprite.alpha = 0;
+        gsap.to(this.#logoSprite, {
+          alpha: 1,
+          duration: 0.8,
+          ease: "power2.out",
+          delay: 0.2,
+        });
+      }
+      const logoTex = this.#logoSprite.texture;
+      const maxLogoWidth = rw * 0.2;
+      const minLogoWidth = 80;
+      let logoW = rw * 2;
+      logoW = Math.min(maxLogoWidth, Math.max(minLogoWidth, logoW));
+      const aspectLogo = logoTex.width / logoTex.height;
+      const logoH = logoW / aspectLogo;
+      this.#logoSprite.width = logoW;
+      this.#logoSprite.height = logoH;
+      const marginLeft = 20;
+      const marginTop = 20;
+      this.#logoSprite.x = marginLeft;
+      this.#logoSprite.y = marginTop + logoH / 2;
+    }
+
+    if (this.#headerText) {
+      if (!this._animatedInitial) {
+        this.#headerText.alpha = 0;
+        gsap.to(this.#headerText, {
+          alpha: 1,
+          duration: 0.8,
+          ease: "power2.out",
+          delay: 0.3,
+        });
+      }
+      const maxFontSize = 32;
+      const minFontSize = 16;
+      let fontSize = Math.round(rw * 0.04);
+      fontSize = Math.min(maxFontSize, Math.max(minFontSize, fontSize));
+      this.#headerText.style.fontSize = fontSize;
+      if (this.#logoSprite) {
+        const gap = 300;
+        this.#headerText.x = this.#logoSprite.x + this.#logoSprite.width + gap;
+        this.#headerText.y = this.#logoSprite.y;
+      } else {
+        this.#headerText.x = rw / 2;
+        this.#headerText.y = 20 + fontSize / 2;
+        this.#headerText.anchor.set(0.5, 0.5);
+      }
     }
 
     if (this.#sprite) {
@@ -147,7 +233,7 @@ export class WeaponScene extends BaseScene {
         ? this.#sprite.x + this.#sprite.width / 2 + marginLeft
         : marginLeft;
       const marginRight = 20;
-      const availW = rw - textX - marginRight;
+      const availW = Math.min(rw * 0.4, rw - textX - marginRight);
       this.#textContainer.x = textX;
 
       if (this.#titleText) {
@@ -183,35 +269,43 @@ export class WeaponScene extends BaseScene {
     }
 
     if (this.#backButton) {
-      const btnW = 150;
-      const btnH = 50;
+      const btnW = 350;
+      const btnH = 100;
       this.#backButton.setSize(btnW, btnH);
-      const marginBottom = 20;
+      const marginBottom = 2;
       this.#backButton.x = marginBottom + btnW / 2;
       this.#backButton.y = rh - marginBottom - btnH / 2;
     }
 
     if (this.#visitSiteButton) {
-      const btnW = 200;
-      const btnH = 50;
+      const btnW = 350;
+      const btnH = 100;
       this.#visitSiteButton.setSize(btnW, btnH);
-      const marginBottom = 20;
+      const marginBottom = 2;
       this.#visitSiteButton.x = rw - marginBottom - btnW / 2;
       this.#visitSiteButton.y = rh - marginBottom - btnH / 2;
     }
 
-    const navBtnW = 100;
-    const navBtnH = 40;
-    const sideMargin = 20;
-    if (this._prevBtn) {
-      this._prevBtn.setSize(navBtnW, navBtnH);
-      this._prevBtn.x = sideMargin + navBtnW / 2;
-      this._prevBtn.y = rh / 2;
+    const arrowSize = Math.round(rw * 0.05);
+    if (this._prevArrow) {
+      this._prevArrow.width = arrowSize;
+      this._prevArrow.height = arrowSize;
+      this._prevArrow.x = 20 + arrowSize / 2;
+      this._prevArrow.y = rh / 2;
+      this._prevArrow.alpha = this._animatedInitial ? 1 : 0;
+      if (!this._animatedInitial) {
+        gsap.to(this._prevArrow, { alpha: 1, duration: 0.5, delay: 0.7 });
+      }
     }
-    if (this._nextBtn) {
-      this._nextBtn.setSize(navBtnW, navBtnH);
-      this._nextBtn.x = rw - sideMargin - navBtnW / 2;
-      this._nextBtn.y = rh / 2;
+    if (this._nextArrow) {
+      this._nextArrow.width = arrowSize;
+      this._nextArrow.height = arrowSize;
+      this._nextArrow.x = rw - 20 - arrowSize / 2;
+      this._nextArrow.y = rh / 2;
+      this._nextArrow.alpha = this._animatedInitial ? 1 : 0;
+      if (!this._animatedInitial) {
+        gsap.to(this._nextArrow, { alpha: 1, duration: 0.5, delay: 0.7 });
+      }
     }
 
     if (!this._animated) {
@@ -288,7 +382,7 @@ export class WeaponScene extends BaseScene {
     if (this.#data) {
       const title = new PIXI.Text(this.#data.displayName.toUpperCase(), {
         fill: "#09d1e1",
-        fontFamily: "Arial",
+        fontFamily: "EurostileBold",
         fontSize: 36,
         align: "left",
       });
@@ -298,7 +392,7 @@ export class WeaponScene extends BaseScene {
 
       const desc = new PIXI.Text(this.#data.description || "", {
         fill: "#ffffff",
-        fontFamily: "Arial",
+        fontFamily: "EurostileBold",
         fontSize: 20,
         wordWrap: true,
         wordWrapWidth: 400,
@@ -312,7 +406,7 @@ export class WeaponScene extends BaseScene {
       Object.entries(stats).forEach(([statName, statValue]) => {
         const statText = new PIXI.Text(`${statName}: ${statValue}`, {
           fill: "#ffffff",
-          fontFamily: "Arial",
+          fontFamily: "EurostileBold",
           fontSize: 18,
           align: "left",
         });

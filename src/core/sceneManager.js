@@ -1,6 +1,9 @@
 import * as PIXI from "pixi.js";
 import { IntroScene } from "../scenes/introScene";
 import { WeaponScene } from "../scenes/weaponScene";
+import { WeaponSelectScene } from "../scenes/weaponSelectScene";
+import { GameScene } from "../scenes/gameScene";
+import { GameOverScene } from "../scenes/gameOverScene";
 
 export class SceneManager {
   #app;
@@ -71,6 +74,15 @@ export class SceneManager {
         break;
       case "weapon":
         scene = new WeaponScene(this, params);
+        break;
+      case "weapon-select":
+        scene = new WeaponSelectScene(this);
+        break;
+      case "game":
+        scene = new GameScene(this, params);
+        break;
+      case "game-over":
+        scene = new GameOverScene(this, params);
         break;
       default:
         throw new Error(`Unknown scene: ${key}`);

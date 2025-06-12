@@ -31,6 +31,10 @@ function initPixiApp() {
         name: "weapon_bg",
         url: "/assets/images/weaponScreen/weapon_bg.png",
       },
+            {
+        name: "game_weapon_bg",
+        url: "/assets/images/gameScreen/game_weapon_bg.png",
+      },
       {
         name: "logo_primary",
         url: "/assets/images/homeScreen/logo_primary.png",
@@ -50,6 +54,14 @@ function initPixiApp() {
       {
         name: "Commander",
         url: "/assets/images/weapons/Elite20_Commander.png",
+      },
+      {
+        name: "left",
+        url: "/assets/images/arrows/left.png",
+      },
+      {
+        name: "right",
+        url: "/assets/images/arrows/right.png",
       },
     ])
     .load(() => {
