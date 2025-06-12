@@ -1,8 +1,20 @@
 import * as PIXI from "pixi.js";
 import { SceneManager } from "./core/sceneManager";
 import { Loader } from "./core/loader";
+import "./main.css";
 
 window.onload = () => {
+  document.fonts.ready
+    .then(() => {
+      initPixiApp();
+    })
+    .catch((err) => {
+      console.error("fonts error", err);
+      initPixiApp();
+    });
+};
+
+function initPixiApp() {
   const canvas = document.getElementById("nerf");
 
   const app = new PIXI.Application({
@@ -45,4 +57,4 @@ window.onload = () => {
       manager.changeScene("intro");
       app.ticker.add((delta) => manager.update(delta));
     });
-};
+}

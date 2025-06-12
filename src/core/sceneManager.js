@@ -60,12 +60,10 @@ export class SceneManager {
   }
 
   changeScene(key, params = {}) {
-    // Удаляем предыдущую сцену
     if (this.#currentScene) {
       this.#currentScene.destroy({ children: true });
       this.stage.removeChild(this.#currentScene);
     }
-    // Создаём новую
     let scene;
     switch (key) {
       case "intro":
