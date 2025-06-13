@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import { SoundManager } from "./soundManager.js";
 
 export class WeaponItem extends PIXI.Container {
   #sprite;
@@ -26,6 +27,7 @@ export class WeaponItem extends PIXI.Container {
 
     this.#onClick = options.onClick;
     this.on("pointertap", () => {
+      SoundManager.play("gun_click");
       if (typeof this.#onClick === "function") {
         this.#onClick(this.#key);
       }
@@ -42,6 +44,7 @@ export class WeaponItem extends PIXI.Container {
       this.#label.y = height / 2 + labelOffsetY;
     }
   }
+  
 
   setPosition(x, y) {
     this.x = x;

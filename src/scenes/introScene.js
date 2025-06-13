@@ -5,6 +5,7 @@ import { ButtonGame } from "../utils/textButton";
 import { VideoPlayer } from "../utils/videoPlayer";
 import { WeaponItem } from "../utils/weaponItem";
 import { weaponsData } from "../data/weaponsData";
+import { SoundManager } from "../utils/soundManager";
 
 export class IntroScene extends BaseScene {
   #bg;
@@ -73,9 +74,13 @@ export class IntroScene extends BaseScene {
 
     this.#previewContainer.interactive = true;
     this.#previewContainer.on("pointerdown", (e) => this._onDragStart(e));
-    this.#previewContainer.on("pointerup", (e) => this._onDragEnd(e));
+    this.#previewContainer.on("pointerup", (e) => {
+      SoundManager.play("swipe");
+      this._onDragEnd(e);
+    });
     this.#previewContainer.on("pointerupoutside", (e) => this._onDragEnd(e));
     this.#previewContainer.on("pointermove", (e) => this._onDragMove(e));
+    SoundManager.play("intro_start");
 
     const labels = ["PLAY MINIGAME", "WATCH VIDEO", "VIEW RANGE", "VISIT NERF"];
     labels.forEach((text) => {
@@ -133,8 +138,9 @@ export class IntroScene extends BaseScene {
         this.#logoSprite.alpha = 0;
         gsap.to(this.#logoSprite, {
           alpha: 1,
-          duration: 1,
           ease: "power2.out",
+          duration: 1,
+          delay: 0.5,
         });
       }
       const logoTex = this.#logoSprite.texture;
@@ -197,8 +203,8 @@ export class IntroScene extends BaseScene {
         gsap.killTweensOf(item.scale);
         item.scale.set(1);
         gsap.to(item.scale, {
-          x: 1.05,
-          y: 1.05,
+          x: 1.08,
+          y: 1.08,
           duration: 1.2,
           repeat: -1,
           yoyo: true,
@@ -233,8 +239,8 @@ export class IntroScene extends BaseScene {
           gsap.killTweensOf(item.scale);
           item.scale.set(1);
           gsap.to(item.scale, {
-            x: 1.05,
-            y: 1.05,
+            x: 1.08,
+            y: 1.08,
             duration: 1.2,
             repeat: -1,
             yoyo: true,
@@ -255,7 +261,6 @@ export class IntroScene extends BaseScene {
         });
       }
     }
-
 
     const btnCount = this.#buttons.length;
     if (isMobile) {

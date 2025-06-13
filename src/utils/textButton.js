@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import { SoundManager } from "./soundManager.js";
 
 export class ButtonGame extends PIXI.Container {
   #background;
@@ -113,7 +114,10 @@ export class ButtonGame extends PIXI.Container {
   }
 
   onClick(callback) {
-    this.on("pointertap", callback);
+    this.on("pointertap", (e) => {
+      SoundManager.play("button_click");
+      callback(e);
+    });
   }
 
   setSize(width, height) {

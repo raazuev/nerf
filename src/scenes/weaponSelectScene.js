@@ -4,6 +4,7 @@ import { gsap } from "gsap";
 import { ButtonGame } from "../utils/textButton";
 import { WeaponItem } from "../utils/weaponItem";
 import { weaponsData } from "../data/weaponsData";
+import { SoundManager } from "../utils/soundManager.js";
 
 export class WeaponSelectScene extends BaseScene {
   #bg;
@@ -15,7 +16,6 @@ export class WeaponSelectScene extends BaseScene {
   #currentIndex = 0;
   #infoBox;
   #nameText;
-  #descText;
   _infoBorder;
   #backButton;
   #playButton;
@@ -63,7 +63,6 @@ export class WeaponSelectScene extends BaseScene {
 
     this.#container = new PIXI.Container();
     this.addChild(this.#container);
-
     this.#createCurrentItem();
 
     const resPrev = PIXI.Loader.shared.resources.left;
@@ -73,7 +72,10 @@ export class WeaponSelectScene extends BaseScene {
       this._prevArrow.anchor.set(0.5);
       this._prevArrow.interactive = true;
       this._prevArrow.buttonMode = true;
-      this._prevArrow.on("pointertap", () => this._goToPrevious());
+      this._prevArrow.on("pointertap", () => {
+        SoundManager.play("swipe");
+        this._goToPrevious();
+      });
       this.addChild(this._prevArrow);
     }
     if (resNext && resNext.texture) {
@@ -81,12 +83,18 @@ export class WeaponSelectScene extends BaseScene {
       this._nextArrow.anchor.set(0.5);
       this._nextArrow.interactive = true;
       this._nextArrow.buttonMode = true;
-      this._nextArrow.on("pointertap", () => this._goToNext());
+      this._nextArrow.on("pointertap", () => {
+        SoundManager.play("swipe");
+        this._goToNext();
+      });
       this.addChild(this._nextArrow);
     }
 
     this.#infoBox = new PIXI.Container();
     this.addChild(this.#infoBox);
+    this._infoBorder = new PIXI.Graphics();
+    this.#infoBox.addChildAt(this._infoBorder, 0);
+
     this.#nameText = new PIXI.Text("", {
       fontFamily: "EurostileBold",
       fontSize: 24,
@@ -97,18 +105,6 @@ export class WeaponSelectScene extends BaseScene {
     this.#nameText.anchor.set(0.5, 0);
     this.#infoBox.addChild(this.#nameText);
 
-    this.#descText = new PIXI.Text("", {
-      fontFamily: "EurostileBold",
-      fontSize: 18,
-      fill: "#cccccc",
-      align: "center",
-      wordWrap: true,
-    });
-    this.#descText.anchor.set(0.5, 0);
-    this.#infoBox.addChild(this.#descText);
-
-    this._infoBorder = new PIXI.Graphics();
-    this.#infoBox.addChildAt(this._infoBorder, 0);
     this._updateInfo();
 
     this.#backButton = new ButtonGame("BACK", {
@@ -140,11 +136,13 @@ export class WeaponSelectScene extends BaseScene {
       onClick: () => this._startGameWithKey(key),
     });
     item.interactive = true;
+    item.buttonMode = true;
     item.on("pointerdown", (e) => this._onDragStart(e));
     item.on("pointermove", (e) => this._onDragMove(e));
-    item.on("pointerup", (e) => this._onDragEnd(e));
+    item.on("pointerup", (e) => {
+      this._onDragEnd(e);
+    });
     item.on("pointerupoutside", (e) => this._onDragEnd(e));
-
     this.#currentItem = item;
     this.#container.addChild(item);
 
@@ -155,12 +153,8 @@ export class WeaponSelectScene extends BaseScene {
     const key = this.#keys[this.#currentIndex];
     const data = weaponsData[key] || {};
     const name = data.displayName || key;
-    const desc = data.description || "";
     if (this.#nameText) {
       this.#nameText.text = name.toUpperCase();
-    }
-    if (this.#descText) {
-      this.#descText.text = desc;
     }
   }
 
@@ -175,8 +169,10 @@ export class WeaponSelectScene extends BaseScene {
     const dragEndX = e.data.global.x;
     const dx = dragEndX - this._dragStartX;
     if (dx > this._dragThreshold) {
+      SoundManager.play("swipe");
       this._goToPrevious();
     } else if (dx < -this._dragThreshold) {
+      SoundManager.play("swipe");
       this._goToNext();
     }
   }
@@ -228,7 +224,7 @@ export class WeaponSelectScene extends BaseScene {
       this.#headerText.style.fontSize = fontSize;
       this.#headerText.style.wordWrapWidth = isMobile ? rw * 0.8 : rw * 0.4;
       if (isMobile) {
-        let y = this.#logoSprite
+        const y = this.#logoSprite
           ? this.#logoSprite.y + this.#logoSprite.height / 2 + 10
           : margin + fontSize / 2;
         this.#headerText.x = rw / 2;
@@ -270,10 +266,10 @@ export class WeaponSelectScene extends BaseScene {
       const itemH = itemW / aspect;
 
       if (isMobile) {
-        let startY = this.#headerText
-          ? this.#headerText.y + this.#headerText.height / 2 + contentMargin
-          : margin + contentMargin;
-        startY += 20;
+        let startY =
+          (this.#headerText
+            ? this.#headerText.y + this.#headerText.height / 2 + contentMargin
+            : margin + contentMargin) + 20;
         this.#currentItem.setSize(itemW, itemH);
         this.#currentItem.x = rw / 2;
         this.#currentItem.y = startY + itemH / 2;
@@ -323,7 +319,7 @@ export class WeaponSelectScene extends BaseScene {
       }
     }
 
-    if (this.#infoBox && this.#nameText && this.#descText) {
+    if (this.#infoBox && this.#nameText) {
       let boxW;
       if (isMobile) {
         boxW = rw * 0.8;
@@ -339,29 +335,18 @@ export class WeaponSelectScene extends BaseScene {
       );
       this.#nameText.style.fontSize = nameFontSize;
       this.#nameText.style.wordWrapWidth = boxW;
-      let descFontSize = Math.min(
-        Math.max(Math.round(boxW * (isMobile ? 0.035 : 0.03)), 14),
-        isMobile ? 20 : 24
-      );
-      this.#descText.style.fontSize = descFontSize;
-      this.#descText.style.wordWrapWidth = boxW;
 
       this._infoBorder.clear();
-
       const paddingX = 20;
       const paddingY = 10;
-
-      let totalTextHeight = 0;
-      totalTextHeight += this.#nameText.height;
-      totalTextHeight += 10;
-      totalTextHeight += this.#descText.height;
-      const boxH = totalTextHeight + paddingY * 2;
+      const textH = this.#nameText.height;
+      const boxH = textH + paddingY * 2;
       const boxWidth = boxW + paddingX * 2;
       this._infoBorder.lineStyle(2, 0x09d1e1);
       this._infoBorder.drawRoundedRect(-boxWidth / 2, 0, boxWidth, boxH, 8);
 
       if (isMobile) {
-        const spriteY =
+        const spriteHeight =
           this.#currentItem &&
           this.#currentItem.children.find((ch) => ch instanceof PIXI.Sprite)
             ? this.#currentItem.y +
@@ -369,13 +354,11 @@ export class WeaponSelectScene extends BaseScene {
                 .height /
                 2
             : rh * 0.5;
-        const yPos = spriteY + 15;
+        const yPos = spriteHeight + 15;
         this.#infoBox.x = rw / 2;
         this.#infoBox.y = yPos;
         this.#nameText.x = 0;
         this.#nameText.y = 10;
-        this.#descText.x = 0;
-        this.#descText.y = this.#nameText.y + this.#nameText.height + 10;
         if (!this._animatedInitial) {
           this.#infoBox.alpha = 0;
           gsap.to(this.#infoBox, { alpha: 1, duration: 0.6, delay: 0.7 });
@@ -388,8 +371,6 @@ export class WeaponSelectScene extends BaseScene {
         this.#infoBox.y = yPos;
         this.#nameText.x = 0;
         this.#nameText.y = 10;
-        this.#descText.x = 0;
-        this.#descText.y = this.#nameText.y + this.#nameText.height + 10;
         if (!this._animatedInitial) {
           this.#infoBox.alpha = 0;
           gsap.to(this.#infoBox, { alpha: 1, duration: 0.6, delay: 0.7 });
@@ -475,7 +456,6 @@ export class WeaponSelectScene extends BaseScene {
     const len = this.#keys.length;
     this.#currentIndex = (this.#currentIndex - 1 + len) % len;
     this.#createCurrentItem();
-
     this._animatedInitial = false;
     this.onResize(this._manager.rendererWidth, this._manager.rendererHeight);
   }

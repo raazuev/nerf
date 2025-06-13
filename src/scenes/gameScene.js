@@ -1,6 +1,7 @@
 import * as PIXI from "pixi.js";
 import { BaseScene } from "../core/baseScene";
 import { gsap } from "gsap";
+import { SoundManager } from "../utils/soundManager";
 
 export class GameScene extends BaseScene {
   #weaponKey;
@@ -19,6 +20,8 @@ export class GameScene extends BaseScene {
   _logoSprite;
   _titleText;
   _crosshair;
+  _gameStarted = false;
+  _countdownText;
 
   constructor(manager, params = {}) {
     super(manager);
@@ -68,21 +71,16 @@ export class GameScene extends BaseScene {
 
     this._score = 0;
     this._scoreText.text = `Score: ${this._score}`;
-    this._startTime = performance.now();
-    this._duration = 20;
-    this._endTime = this._startTime + this._duration * 1000;
+    this._gameStarted = false;
     this._gameOverTriggered = false;
-    this._lastSpawnTime = performance.now();
-
-    this._hudContainer.alpha = 0;
-    gsap.to(this._hudContainer, { alpha: 1, duration: 0.5 });
 
     const resCross = PIXI.Loader.shared.resources["target"];
     if (resCross && resCross.texture) {
       this._crosshair = new PIXI.Sprite(resCross.texture);
       this._crosshair.anchor.set(0.5);
-      this._crosshair.width = 40;
-      this._crosshair.height = 40;
+      const baseSize = 40;
+      this._crosshair.width = baseSize;
+      this._crosshair.height = baseSize;
       this._crosshair.alpha = 0;
       this.addChild(this._crosshair);
     }
@@ -90,6 +88,20 @@ export class GameScene extends BaseScene {
     this.interactive = true;
     this.on("pointermove", this._onPointerMove, this);
     this.on("pointerdown", this._onPointerDown, this);
+
+    this._countdownText = new PIXI.Text("", {
+      fontFamily: "EurostileBold",
+      fontSize: 72,
+      fill: "#ffffff",
+      align: "center",
+      stroke: "#000000",
+      strokeThickness: 4,
+    });
+    this._countdownText.anchor.set(0.5);
+    this._countdownText.alpha = 0;
+    this.addChild(this._countdownText);
+
+    this._startCountdown();
   }
 
   onResize(rw, rh) {
@@ -124,15 +136,22 @@ export class GameScene extends BaseScene {
           : 20 + fontSize + 5;
       }
     }
-
     if (this._crosshair && this._crosshair.alpha === 0) {
       this._crosshair.x = -100;
       this._crosshair.y = -100;
+    }
+    if (this._countdownText) {
+      this._countdownText.x = rw / 2;
+      this._countdownText.y = rh / 2;
     }
   }
 
   update(delta) {
     const now = performance.now();
+
+    if (!this._gameStarted) {
+      return;
+    }
 
     const timeLeftSec = Math.max(0, (this._endTime - now) / 1000);
     if (this._timerText) {
@@ -141,7 +160,6 @@ export class GameScene extends BaseScene {
         this._timerText.text = newText;
       }
     }
-
     if (now >= this._endTime && !this._gameOverTriggered) {
       this._gameOverTriggered = true;
       this._targets.forEach((t) => this._destroyTarget(t));
@@ -150,7 +168,6 @@ export class GameScene extends BaseScene {
       this._onGameOver(finalScore);
       return;
     }
-
     if (!this._gameOverTriggered) {
       const isMobile = this._manager.rendererWidth < 768;
       const spawnInterval = isMobile ? 1200 : this._spawnInterval;
@@ -189,6 +206,10 @@ export class GameScene extends BaseScene {
   }
 
   _onPointerDown(event) {
+    if (!this._gameStarted) {
+      return;
+    }
+    SoundManager.play("shot_game");
     if (this._crosshair) {
       gsap.killTweensOf(this._crosshair.scale);
       gsap.fromTo(
@@ -205,7 +226,7 @@ export class GameScene extends BaseScene {
       );
       const origY = this._crosshair.y;
       gsap.to(this._crosshair, {
-        y: origY + 5,
+        y: origY + 3,
         duration: 0.05,
         yoyo: true,
         repeat: 1,
@@ -214,19 +235,54 @@ export class GameScene extends BaseScene {
     }
   }
 
+  _startCountdown() {
+    const sequence = ["3", "2", "1", "Shoot!"];
+    let delay = 0;
+    this._countdownText.alpha = 1;
+
+    sequence.forEach((label, idx) => {
+      gsap.delayedCall(delay, () => {
+        this._countdownText.text = label;
+        this._countdownText.scale.set(0.5);
+        gsap.to(this._countdownText.scale, {
+          x: 1.2,
+          y: 1.2,
+          duration: 0.5,
+          yoyo: true,
+          repeat: 1,
+          ease: "power1.out",
+        });
+        SoundManager.play("start_game");
+      });
+      delay += 1;
+    });
+    gsap.delayedCall(delay, () => {
+      gsap.to(this._countdownText, {
+        alpha: 0,
+        duration: 0.3,
+      });
+      this._gameStarted = true;
+      this._score = 0;
+      this._scoreText.text = `Score: ${this._score}`;
+      this._startTime = performance.now();
+      this._endTime = this._startTime + this._duration * 1000;
+      this._lastSpawnTime = performance.now();
+    });
+  }
+
   _spawnTarget() {
     const rw = this._manager.rendererWidth;
     const rh = this._manager.rendererHeight;
     const pointsArr = [10, 20, 30, 50, 100];
     const points = pointsArr[Math.floor(Math.random() * pointsArr.length)];
     const maxRadius = 60;
-    const minRadius = 25;
+    const minRadius = 24;
     const idx = pointsArr.indexOf(points);
     const maxIdx = pointsArr.length - 1;
     const radius = maxRadius - ((maxRadius - minRadius) * idx) / maxIdx;
 
     const minV = 80;
-    const maxV = 200;
+    const maxV = 180;
     const speed = minV + ((maxV - minV) * idx) / maxIdx;
 
     const topOffset = 60;
@@ -238,7 +294,6 @@ export class GameScene extends BaseScene {
     const dirY = Math.sin(angle);
 
     const circle = new PIXI.Graphics();
-
     circle.beginFill(0xff0000);
     circle.drawCircle(0, 0, radius);
     circle.endFill();
@@ -264,8 +319,10 @@ export class GameScene extends BaseScene {
     };
 
     circle.on("pointertap", () => {
+      if (!this._gameStarted) return;
+      SoundManager.play("hit_target");
       circle.interactive = false;
-      gsap.killTweensOf(circle);
+      gsap.killTweensOf(circle.scale);
       gsap.to(circle.scale, {
         x: 1.5,
         y: 1.5,
