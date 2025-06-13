@@ -78,10 +78,10 @@ export class GameScene extends BaseScene {
     if (resCross && resCross.texture) {
       this._crosshair = new PIXI.Sprite(resCross.texture);
       this._crosshair.anchor.set(0.5);
-      const baseSize = 40;
+      const baseSize = 20;
       this._crosshair.width = baseSize;
       this._crosshair.height = baseSize;
-      this._crosshair.alpha = 0;
+      this._crosshair.alpha = 1;
       this.addChild(this._crosshair);
     }
 
