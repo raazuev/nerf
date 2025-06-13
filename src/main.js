@@ -69,6 +69,34 @@ function initPixiApp() {
         name: "target",
         url: "/assets/images/gameScreen/target.png",
       },
+      {
+        name: "shot_game",
+        url: "/assets/audio/shot_game.mp3",
+      },
+      {
+        name: "gun_click",
+        url: "/assets/audio/gun_click.mp3",
+      },
+      {
+        name: "button_click",
+        url: "/assets/audio/button_click.mp3",
+      },
+      {
+        name: "hit_target",
+        url: "/assets/audio/hit_target.mp3",
+      },
+      {
+        name: "start_game",
+        url: "/assets/audio/start_game.mp3",
+      },
+      {
+        name: "swipe",
+        url: "/assets/audio/swipe.mp3",
+      },
+      {
+        name: "intro_start",
+        url: "/assets/audio/intro_start.mp3",
+      },
     ])
     .load(() => {
       const manager = new SceneManager(app);

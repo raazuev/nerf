@@ -3,6 +3,7 @@ import { BaseScene } from "../core/baseScene";
 import { gsap } from "gsap";
 import { ButtonGame } from "../utils/textButton";
 import { weaponsData } from "../data/weaponsData";
+import { SoundManager } from "../utils/soundManager";
 
 export class WeaponScene extends BaseScene {
   #bg;
@@ -124,7 +125,10 @@ export class WeaponScene extends BaseScene {
       this._prevArrow.anchor.set(0.5);
       this._prevArrow.interactive = true;
       this._prevArrow.buttonMode = true;
-      this._prevArrow.on("pointertap", () => this._goToPrevious());
+      this._prevArrow.on("pointertap", () => {
+        SoundManager.play("swipe");
+        this._goToPrevious();
+      });
       this.addChild(this._prevArrow);
     }
     if (resNext && resNext.texture) {
@@ -132,7 +136,10 @@ export class WeaponScene extends BaseScene {
       this._nextArrow.anchor.set(0.5);
       this._nextArrow.interactive = true;
       this._nextArrow.buttonMode = true;
-      this._nextArrow.on("pointertap", () => this._goToNext());
+      this._nextArrow.on("pointertap", () => {
+        SoundManager.play("swipe");
+        this._goToNext();
+      });
       this.addChild(this._nextArrow);
     }
   }
@@ -203,8 +210,10 @@ export class WeaponScene extends BaseScene {
     const dragEndX = e.data.global.x;
     const dx = dragEndX - this._dragStartX;
     if (dx > this._dragThreshold) {
+      SoundManager.play("swipe");
       this._goToPrevious();
     } else if (dx < -this._dragThreshold) {
+      SoundManager.play("swipe");
       this._goToNext();
     }
   }
